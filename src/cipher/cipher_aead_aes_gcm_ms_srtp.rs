@@ -107,9 +107,16 @@ impl CipherAeadAesGcmMsSrtp {
         roc: u32,
         session_salt_key: &[u8]
     ) -> Result<Vec<u8>, Error> {
-        key_derivation::generate_counter(
-            header.sequence_number, roc, header.ssrc, session_salt_key
-        )
+        let mut iv = vec![0u8; 12];
+        BigEndian::write_u32(&mut iv[2..], header.ssrc);
+        BigEndian::write_u32(&mut iv[6..], roc);
+        BigEndian::write_u16(&mut iv[10..], header.sequence_number);
+
+        for (i, v) in iv.iter_mut().enumerate() {
+            *v ^= session_salt_key[i];
+        }
+
+        Ok(iv)
     }
 
     /// The 12-octet IV used by AES-GCM SRTCP is formed by first
@@ -179,7 +186,7 @@ impl Cipher for CipherAeadAesGcmMsSrtp {
         let mut writer: Vec<u8> = Vec::new();
 
         header.marshal(&mut writer)?;
-        let nonce = self.rtp_initialization_vector(header, roc, &self.session_keys.srtp_session_salt_key)?;
+        let nonce = self.rtp_initialization_vector(header, roc, &self.session_keys.srtp_session_salt_key[2..])?;
 
         let mut encrypted = self.srtp_cipher.encrypt(
             Nonce::from_slice(&nonce),
@@ -199,7 +206,7 @@ impl Cipher for CipherAeadAesGcmMsSrtp {
         header: &rtp::header::Header,
         roc: u32,
     ) -> Result<Vec<u8>, Error> {
-        let nonce = self.rtp_initialization_vector(header, roc, &self.session_keys.srtp_session_salt_key)?;
+        let nonce = self.rtp_initialization_vector(header, roc, &self.session_keys.srtp_session_salt_key[2..])?;
 
         let decrypted_msg: Vec<u8> = self.srtp_cipher.decrypt(
             Nonce::from_slice(&nonce),
