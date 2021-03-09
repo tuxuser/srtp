@@ -141,6 +141,10 @@ impl Context {
             ProtectionProfile::AEADAES128GCM => {
                 Box::new(cipher::CipherAeadAesGcm::new(master_key, master_salt)?)
             }
+
+            ProtectionProfile::AEADAES128GCM_MS_SRTP => {
+                Box::new(cipher::CipherAeadAesGcmMsSrtp::new(master_key, master_salt)?)
+            }
         };
 
         let srtp_ctx_opt = if let Some(ctx_opt) = srtp_ctx_opt {

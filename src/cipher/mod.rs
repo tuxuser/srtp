@@ -1,8 +1,10 @@
 pub mod cipher_aead_aes_gcm;
 pub mod cipher_aes_cm_hmac_sha1;
+pub mod cipher_aead_aes_gcm_ms_srtp;
 mod test;
 
 pub(crate) use cipher_aead_aes_gcm::CipherAeadAesGcm;
+pub(crate) use cipher_aead_aes_gcm_ms_srtp::CipherAeadAesGcmMsSrtp;
 pub(crate) use cipher_aes_cm_hmac_sha1::CipherAesCmHmacSha1;
 
 use crate::error::Error;
